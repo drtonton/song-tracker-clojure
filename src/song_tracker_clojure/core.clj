@@ -3,7 +3,8 @@
             [ring.adapter.jetty :as j]
             [ring.middleware.params :as p]
             [ring.util.response :as r]
-            [hiccup.core :as h])
+            [hiccup.core :as h]
+            [clojure.walk :as walk])
   (:gen-class))
 
 (defonce songs (atom []))
@@ -19,15 +20,16 @@
              [:body
               [:form {:action "/add-song" :method "post"}
                [:input {:type "text" :placeholder "Enter song" :name "song"}]
-;               [:input {:type "text" :placeholder "Artist" :name "artist"}]
+               [:input {:type "text" :placeholder "Artist" :name "artist"}]
                [:button {:type "submit"} "Add Song"]]
               [:ol
                (map (fn [song]
-                      [:li song])
+                      [:li (str(:song song)" by: "(:artist song))])
                  @songs)]]]))
     (c/POST "/add-song" request
-        (let [song (get (:params request) "song")]
+        (let [song (walk/keywordize-keys (:params request))]
           (swap! songs conj song)
+          (println song)
           (r/redirect "/"))))
 
 (defn -main []
